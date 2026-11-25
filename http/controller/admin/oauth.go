@@ -1,6 +1,7 @@
 package admin
 
 import (
+	"crypto/subtle"
 	"strconv"
 
 	"github.com/gin-gonic/gin"
@@ -8,6 +9,7 @@ import (
 	"github.com/lejianwen/rustdesk-api/v2/http/request/admin"
 	adminReq "github.com/lejianwen/rustdesk-api/v2/http/request/admin"
 	"github.com/lejianwen/rustdesk-api/v2/http/response"
+	"github.com/lejianwen/rustdesk-api/v2/model"
 	"github.com/lejianwen/rustdesk-api/v2/service"
 )
 
@@ -81,6 +83,12 @@ func (o *Oauth) Confirm(c *gin.Context) {
 		response.Fail(c, 101, response.TranslateMsg(c, "OauthExpired"))
 		return
 	}
+	// Only a pending web-auth login can be approved here. Logins through a real
+	// provider must finish at the provider callback, and an entry can be approved once.
+	if !global.Config.App.WebSso || v.Op != model.OauthTypeWebauth || v.Action != service.OauthActionTypeLogin || v.UserId != 0 {
+		response.Fail(c, 101, response.TranslateMsg(c, "OauthExpired"))
+		return
+	}
 	u := service.AllService.UserService.CurUser(c)
 	v.UserId = u.Id
 	service.AllService.OauthService.SetOauthCache(j.Code, v, 0)
@@ -104,6 +112,14 @@ func (o *Oauth) BindConfirm(c *gin.Context) {
 		response.Fail(c, 101, response.TranslateMsg(c, "OauthExpired"))
 		return
 	}
+	// Only a login that came back from the provider unbound can be bound, once,
+	// and only from the browser that went through the provider callback.
+	bindToken, _ := c.Cookie(service.OauthBindCookieName)
+	if oauthCache.Action != service.OauthActionTypeLogin || oauthCache.OpenId == "" || oauthCache.UserId != 0 ||
+		oauthCache.BindToken == "" || subtle.ConstantTimeCompare([]byte(bindToken), []byte(oauthCache.BindToken)) != 1 {
+		response.Fail(c, 101, response.TranslateMsg(c, "OauthExpired"))
+		return
+	}
 	oauthUser := oauthCache.ToOauthUser()
 	user := service.AllService.UserService.CurUser(c)
 	err = oauthService.BindOauthUser(user.Id, oauthUser, oauthCache.Op)
@@ -113,7 +129,9 @@ func (o *Oauth) BindConfirm(c *gin.Context) {
 	}
 
 	oauthCache.UserId = user.Id
+	oauthCache.BindToken = ""
 	oauthService.SetOauthCache(j.Code, oauthCache, 0)
+	c.SetCookie(service.OauthBindCookieName, "", -1, service.OauthBindCookiePath, "", false, true)
 	response.Success(c, oauthCache)
 }
 

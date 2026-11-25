@@ -8,9 +8,10 @@ import (
 )
 
 const (
-	DebugMode     = "debug"
-	ReleaseMode   = "release"
-	DefaultConfig = "conf/config.yaml"
+	DebugMode               = "debug"
+	ReleaseMode             = "release"
+	DefaultConfig           = "conf/config.yaml"
+	DefaultShareExpireHours = 24
 )
 
 type App struct {
@@ -23,6 +24,7 @@ type App struct {
 	DisablePwdLogin  bool          `mapstructure:"disable-pwd-login"`
 	CaptchaThreshold int           `mapstructure:"captcha-threshold"`
 	BanThreshold     int           `mapstructure:"ban-threshold"`
+	ShareExpireHours int           `mapstructure:"share-expire-hours"`
 }
 type Admin struct {
 	Title           string `mapstructure:"title"`
@@ -90,6 +92,9 @@ func Init(rowVal *Config, path string) *viper.Viper {
 	*/
 	if err := v.Unmarshal(rowVal); err != nil {
 		panic(fmt.Errorf("Fatal error config: %s \n", err))
+	}
+	if rowVal.App.ShareExpireHours == 0 {
+		rowVal.App.ShareExpireHours = DefaultShareExpireHours
 	}
 	rowVal.Rustdesk.LoadKeyFile()
 	rowVal.Admin.Init()

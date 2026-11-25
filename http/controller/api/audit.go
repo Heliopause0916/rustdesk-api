@@ -1,13 +1,15 @@
 package api
 
 import (
+	"time"
+
 	"github.com/gin-gonic/gin"
 	"github.com/gin-gonic/gin/binding"
+	"github.com/lejianwen/rustdesk-api/v2/global"
 	request "github.com/lejianwen/rustdesk-api/v2/http/request/api"
 	"github.com/lejianwen/rustdesk-api/v2/http/response"
 	"github.com/lejianwen/rustdesk-api/v2/model"
 	"github.com/lejianwen/rustdesk-api/v2/service"
-	"time"
 )
 
 type Audit struct {
@@ -33,6 +35,12 @@ func (a *Audit) AuditConn(c *gin.Context) {
 	/*ttt := &gin.H{}
 	c.ShouldBindBodyWith(ttt, binding.JSON)
 	fmt.Println(ttt)*/
+	// Drop records that do not come from the registered device itself.
+	if _, ok := service.AllService.PeerService.FindReporter(af.Id, af.Uuid); !ok {
+		global.Logger.Warnf("audit conn from unregistered reporter, drop it, id=%s, ip=%s", af.Id, c.ClientIP())
+		response.Success(c, "")
+		return
+	}
 	ac := af.ToAuditConn()
 	if af.Action == model.AuditActionNew {
 		service.AllService.AuditService.CreateAuditConn(ac)
@@ -78,6 +86,12 @@ func (a *Audit) AuditFile(c *gin.Context) {
 	//ttt := &gin.H{}
 	//c.ShouldBindBodyWith(ttt, binding.JSON)
 	//fmt.Println(ttt)
+	// Drop records that do not come from the registered device itself.
+	if _, ok := service.AllService.PeerService.FindReporter(aff.Id, aff.Uuid); !ok {
+		global.Logger.Warnf("audit file from unregistered reporter, drop it, id=%s, ip=%s", aff.Id, c.ClientIP())
+		response.Success(c, "")
+		return
+	}
 	af := aff.ToAuditFile()
 	service.AllService.AuditService.CreateAuditFile(af)
 	response.Success(c, "")

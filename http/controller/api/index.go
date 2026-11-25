@@ -49,8 +49,10 @@ func (i *Index) Heartbeat(c *gin.Context) {
 		c.JSON(http.StatusOK, gin.H{})
 		return
 	}
-	peer := service.AllService.PeerService.FindById(info.Id)
-	if peer == nil || peer.RowId == 0 {
+	// A heartbeat may only mark the device itself online; the uuid must match
+	// the registered peer for the reported id.
+	peer, ok := service.AllService.PeerService.FindReporter(info.Id, info.Uuid)
+	if !ok {
 		c.JSON(http.StatusOK, gin.H{})
 		return
 	}

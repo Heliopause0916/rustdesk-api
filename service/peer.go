@@ -19,6 +19,21 @@ func (ps *PeerService) FindByUuid(uuid string) *model.Peer {
 	DB.Where("uuid = ?", uuid).First(p)
 	return p
 }
+
+// FindReporter checks that a peer-reported record (sysinfo, heartbeat, audit)
+// comes from the device itself: the id must exist and the registered uuid must
+// match the reported uuid. An empty id/uuid, an unknown peer (RowId==0) or a
+// uuid mismatch returns false, so a spoofed id cannot write records for other devices.
+func (ps *PeerService) FindReporter(id, uuid string) (*model.Peer, bool) {
+	if id == "" || uuid == "" {
+		return nil, false
+	}
+	peer := ps.FindById(id)
+	if peer.RowId == 0 || peer.Uuid != uuid {
+		return nil, false
+	}
+	return peer, true
+}
 func (ps *PeerService) InfoByRowId(id uint) *model.Peer {
 	p := &model.Peer{}
 	DB.Where("row_id = ?", id).First(p)

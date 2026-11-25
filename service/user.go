@@ -1,6 +1,8 @@
 package service
 
 import (
+	crand "crypto/rand"
+	"encoding/hex"
 	"errors"
 	"math/rand"
 	"strconv"
@@ -52,6 +54,12 @@ func (us *UserService) InfoByUsernamePassword(username, password string) *model.
 			return u
 		}
 		Logger.Errorf("LDAP authentication failed, %v", err)
+		// Only fall back to the local password when the user does not exist in LDAP
+		// or the lookup itself failed. A user that LDAP rejected (wrong password,
+		// disabled, not in allow-group) must not be able to log in with a local password.
+		if !errors.Is(err, ErrLdapUserNotFound) && !errors.Is(err, ErrLdapSearchFailed) {
+			return &model.User{}
+		}
 		Logger.Warn("Fallback to local database")
 	}
 	u := &model.User{}
@@ -90,7 +98,12 @@ func (us *UserService) GenerateToken(u *model.User) string {
 	if len(Jwt.Key) > 0 {
 		return Jwt.GenerateToken(u.Id)
 	}
-	return utils.Md5(u.Username + time.Now().String())
+	// Access token without jwt.key: 32 random bytes, not a hash of username and time
+	b := make([]byte, 32)
+	if _, err := crand.Read(b); err != nil {
+		panic(err)
+	}
+	return hex.EncodeToString(b)
 }
 
 // Login 登录
@@ -347,6 +360,10 @@ func (us *UserService) RegisterByOauth(oauthUser *model.OauthUser, op string) (e
 			user = us.InfoByEmail(email)
 		}
 		if user.Id != 0 {
+			// only link to an existing account when the provider says it verified the email
+			if !oauthUser.VerifiedEmail {
+				return errors.New("OauthEmailNotVerified"), nil
+			}
 			ut.FromOauthUser(user.Id, oauthUser, oauthType, op)
 			DB.Create(ut)
 			return nil, user

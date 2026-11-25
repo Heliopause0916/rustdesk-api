@@ -151,8 +151,16 @@ func (s *AddressBookService) UpdateAll(u *model.AddressBook) error {
 }
 
 // ShareByWebClient 分享
+// Known limitation: the shared peer password is stored in plaintext so the
+// webclient can connect with the real password; the record is protected only
+// by the share token and the expiry window below.
 func (s *AddressBookService) ShareByWebClient(m *model.ShareRecord) error {
 	m.ShareToken = uuid.New().String()
+	// A permanent share (expire: 0) would keep the plaintext password valid
+	// forever; cap it at the configured app.share-expire-hours.
+	if m.Expire == 0 {
+		m.Expire = int64(Config.App.ShareExpireHours) * 3600
+	}
 	return DB.Create(m).Error
 }
 

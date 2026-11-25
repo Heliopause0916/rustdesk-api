@@ -9,6 +9,7 @@ app:
   token-expire: 168h
   web-sso: true #web auth sso
   disable-pwd-login: false #禁用密码登录
+  share-expire-hours: 24 # shared-peer 共享有效期（小时），0/缺省时使用默认 24 小时；到期后共享失效
 
 admin:
   title: "RustDesk API Admin"

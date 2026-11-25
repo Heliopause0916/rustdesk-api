@@ -36,6 +36,7 @@ type OidcEndpoint struct {
 
 type OauthCacheItem struct {
 	UserId     uint   `json:"user_id"`
+	BindToken  string `json:"-"`
 	Id         string `json:"id"` //rustdesk的设备ID
 	Op         string `json:"op"`
 	Action     string `json:"action"`
@@ -47,8 +48,8 @@ type OauthCacheItem struct {
 	Username   string `json:"username"`
 	Name       string `json:"name"`
 	Email      string `json:"email"`
-	Verifier   string `json:"verifier"` // used for oauth pkce
-	Nonce      string `json:"nonce"`
+	Verifier   string `json:"-"` // used for oauth pkce
+	Nonce      string `json:"-"`
 }
 
 func (oci *OauthCacheItem) ToOauthUser() *model.OauthUser {
@@ -65,6 +66,11 @@ var OauthCache = &sync.Map{}
 const (
 	OauthActionTypeLogin = "login"
 	OauthActionTypeBind  = "bind"
+)
+
+const (
+	OauthBindCookieName = "rustdesk_oauth_bind"
+	OauthBindCookiePath = "/api/admin/oauth"
 )
 
 func (oci *OauthCacheItem) UpdateFromOauthUser(oauthUser *model.OauthUser) {
@@ -100,6 +106,9 @@ func (os *OauthService) BeginAuth(op string) (error error, state, verifier, nonc
 	verifier = ""
 	nonce = ""
 	if op == model.OauthTypeWebauth {
+		if !Config.App.WebSso {
+			return errors.New("ConfigNotFound"), "", "", "", ""
+		}
 		url = Config.Rustdesk.ApiServer + "/_admin/#/oauth/" + state
 		//url = "http://localhost:8888/_admin/#/oauth/" + code
 		return nil, state, verifier, nonce, url
