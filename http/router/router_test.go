@@ -19,7 +19,7 @@ func TestWebInitWebClient2Routes(t *testing.T) {
 	global.Config.Gin.ResourcesPath = "../../resources"
 	global.Config.Rustdesk.IdServer = "192.168.1.66:21116"
 	global.Config.Rustdesk.ApiServer = "http://127.0.0.1:21114"
-	global.Config.Rustdesk.Key = "test-key"
+	global.Config.Rustdesk.Key = "test-key\n" // key-file 内容常带尾随换行，输出前需 trim
 
 	g := gin.New()
 	WebInit(g)
@@ -45,6 +45,9 @@ func TestWebInitWebClient2Routes(t *testing.T) {
 		if !strings.Contains(body, want) {
 			t.Fatalf("GET /webclient2 body missing %q", want)
 		}
+	}
+	if strings.Contains(body, "key = test-key\n") {
+		t.Fatal("GET /webclient2 body contains untrimmed key value")
 	}
 
 	// StaticFS 通配路由继续提供静态资源。

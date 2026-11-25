@@ -25,7 +25,11 @@ func (i *Index) WebClient2(c *gin.Context) {
 	if err != nil {
 		panic(fmt.Errorf("read webclient2 index.html: %w", err))
 	}
-	c.Data(200, "text/html; charset=utf-8", []byte(strings.Replace(string(b), "{{CUSTOM_CONFIG}}", customConfig(), 1)))
+	s := string(b)
+	if n := strings.Count(s, "{{CUSTOM_CONFIG}}"); n != 1 {
+		panic(fmt.Errorf("webclient2 index.html: expected exactly 1 {{CUSTOM_CONFIG}} placeholder, got %d", n))
+	}
+	c.Data(200, "text/html; charset=utf-8", []byte(strings.Replace(s, "{{CUSTOM_CONFIG}}", customConfig(), 1)))
 }
 
 // customConfig 按 dD() 调研到的 INI 格式构造自定义配置：
