@@ -1,8 +1,6 @@
 module github.com/lejianwen/rustdesk-api/v2
 
-go 1.23
-
-toolchain go1.23.10
+go 1.27.3
 
 require (
 	github.com/BurntSushi/toml v1.3.2
