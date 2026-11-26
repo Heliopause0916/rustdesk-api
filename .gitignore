@@ -6,5 +6,4 @@ resources/admin
 release
 data/rustdeskapi.db
 .artifacts/
-resources/web/
 resources/web2/

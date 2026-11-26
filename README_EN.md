@@ -192,7 +192,6 @@ The table below does not list all configurations. Please refer to the configurat
 | RUSTDESK_API_RUSTDESK_API_SERVER                       | Rustdesk API server address                                                                                                                         | http://192.168.1.66:21114     |
 | RUSTDESK_API_RUSTDESK_KEY                              | Rustdesk key                                                                                                                                        | 123456789                     |
 | RUSTDESK_API_RUSTDESK_KEY_FILE                         | Rustdesk key file                                                                                                                                   | `./conf/data/id_ed25519.pub`  |
-| RUSTDESK_API_RUSTDESK<br/>_WEBCLIENT_MAGIC_QUERYONLINE | New online query method is enabled in the web client v2; '1': Enabled, '0': Disabled, not enabled by default                                        | `0`                           |
 | RUSTDESK_API_RUSTDESK_WS_HOST                          | Custom Websocket Host                                                                                                                               | `wss://192.168.1.123:1234`    |
 | ---- PROXY -----                                       | ---------------                                                                                                                                     | ----------                    |
 | RUSTDESK_API_PROXY_ENABLE                              | proxy_enable :`false`, `true`                                                                                                                       | `false`                       |
@@ -319,7 +318,6 @@ Download the release from [release](https://github.com/lejianwen/rustdesk-api/re
 - [WIKI](https://github.com/lejianwen/rustdesk-api/wiki)
 - [Connection Timeout](https://github.com/lejianwen/rustdesk-api/issues/92)
 - [Change client ID](https://github.com/abdullah-erturk/RustDesk-ID-Changer)
-- [Web client source](https://hub.docker.com/r/keyurbhole/flutter_web_desk)
 
 ## Acknowledgements
 
