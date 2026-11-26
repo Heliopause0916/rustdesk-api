@@ -32,7 +32,11 @@ else
 fi
 
 # Compile the Go code and output it to the release directory
-go build -o release/apimain cmd/apimain.go
+if [ "${MUSL:-0}" = "1" ]; then
+    CC=musl-gcc CGO_LDFLAGS="-static" go build -ldflags "-s -w" -o release/apimain cmd/apimain.go
+else
+    go build -o release/apimain cmd/apimain.go
+fi
 
 # Copy resource files to the release directory
 cp -ar resources release/
