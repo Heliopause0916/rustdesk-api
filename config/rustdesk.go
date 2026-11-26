@@ -18,7 +18,6 @@ type Rustdesk struct {
 	Key             string `mapstructure:"key"`
 	KeyFile         string `mapstructure:"key-file"`
 	Personal        int    `mapstructure:"personal"`
-	WsHost          string `mapstructure:"ws-host"`
 }
 
 func (rd *Rustdesk) LoadKeyFile() {

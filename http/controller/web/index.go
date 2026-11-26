@@ -51,4 +51,3 @@ func customConfig() string {
 	}
 	return strings.Join(lines, "\n")
 }
-
